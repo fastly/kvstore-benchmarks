@@ -1,0 +1,41 @@
+# This file describes a Fastly Compute@Edge package. To learn more visit:
+# https://developer.fastly.com/reference/fastly-toml/
+
+authors = ["kay.sawada@fastly.com"]
+description = ""
+language = "rust"
+manifest_version = 1
+name = "kvstore-benchmarks"
+service_id = ""
+
+[local_server]
+
+  [local_server.backends]
+
+  [local_server.config_stores]
+
+    [local_server.config_stores.myconfigstore]
+      format = "inline-toml"
+
+      [local_server.config_stores.myconfigstore.contents]
+        readme = "README.md"
+
+  [local_server.kv_stores]
+
+    [[local_server.kv_stores.compute-store-read-write-latencies-ASIA]]
+      file = "./README.md"
+      key = "readme"
+
+    [[local_server.kv_stores.compute-store-read-write-latencies-EU]]
+      file = "./README.md"
+      key = "readme"
+
+    [[local_server.kv_stores.compute-store-read-write-latencies-US]]
+      file = "./README.md"
+      key = "readme"
+
+  [local_server.secret_stores]
+
+    [[local_server.secret_stores.compute-store-read-write-latencies]]
+      file = "./README.md"
+      key = "readme"

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Compute store miss latency</title>
+    <link rel="stylesheet" href="https://maxbeier.github.io/text-spinners/spinners.css">
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@3.5.17/d3.min.js"></script>
+
+    <style>
+      body {
+        font-family: sans-serif;
+        text-align: center;
+        margin: 2em 10em;
+      }
+      table {
+        border: solid black 1px;
+        border-spacing: 0;
+        margin: auto;
+      }
+      tr:nth-child(even) {
+	      background: #cde8f6;
+      }
+      th, td {
+        padding: 5px;
+        min-width: 90px;
+      }
+      .float {
+        text-align: right;
+      }
+      .box {
+        display: flex;
+        align-items: stretch;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .description {
+        color: #888888;
+        font-style:italic;
+      }
+
+      .loading {
+        animation:loading 3s linear infinite;
+      }
+      @keyframes loading {
+        0%, 100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.6;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Compute store read/write latencies</h1>
+    <p id="storeSelector"></p>
+    <p class="description">
+      Note: Inspired by the awesome <a href="https://ghastly-wise-ewe.edgecompute.app/">Leon's original benchmarking application</a>(<a href="https://github.com/fastly/compute-store-miss-latency/">source</a>), Kay created this fork(<a href="https://github.com/fastly/compute-store-read-write-latencies/">source</a>) with an intention to add a few metrics such as write and read(hit) latency, along with summary info displayed at the top of each section.
+    </p>
+    <hr>
+    <h2 id="readhit-latency">Read(Hit) latency</h2>
+    <p id="readhit-state" class="description time loading">
+      Running benchmark.<span class="loading"></span>
+    </p>
+    <table>
+      <tr>
+        <th>Store</th>
+        <th>From(POP)</th>
+        <th># of Requests</th>
+        <th>mean</th>
+        <th>median</th>
+        <th>min</th>
+        <th>max</th>
+      </tr>
+      <tr id="summary-SecretStore-read-hit"></tr>
+      <tr id="summary-ConfigStore-read-hit"></tr>
+      <tr id="summary-KVStore_US-read-hit"></tr>
+      <tr id="summary-KVStore_EU-read-hit"></tr>
+      <tr id="summary-KVStore_ASIA-read-hit"></tr>
+      <tr id="summary-KVStore_AUS-read-hit"></tr>
+    </table>
+    <div class="box">
+      <div id="SecretStore-read-hit"></div>
+      <div id="ConfigStore-read-hit"></div>
+      <div id="KVStore_US-read-hit"></div>
+      <div id="KVStore_EU-read-hit"></div>
+      <div id="KVStore_ASIA-read-hit"></div>
+      <div id="KVStore_AUS-read-hit"></div>
+    </div>
+    <hr>
+    <h2 id="readmiss-latency">Read(Miss) latency</h2>
+    <p id="readmiss-state" class="description time loading">
+      Running benchmark.<span class="loading"></span>
+    </p>
+    <table>
+      <tr>
+        <th>Store</th>
+        <th>From(POP)</th>
+        <th># of Requests</th>
+        <th>mean</th>
+        <th>median</th>
+        <th>min</th>
+        <th>max</th>
+      </tr>
+      <tr id="summary-SecretStore-read-miss"></tr>
+      <tr id="summary-ConfigStore-read-miss"></tr>
+      <tr id="summary-KVStore_US-read-miss"></tr>
+      <tr id="summary-KVStore_EU-read-miss"></tr>
+      <tr id="summary-KVStore_ASIA-read-miss"></tr>
+      <tr id="summary-KVStore_AUS-read-miss"></tr>
+    </table>
+    <div class="box">
+      <div id="SecretStore-read-miss"></div>
+      <div id="ConfigStore-read-miss"></div>
+      <div id="KVStore_US-read-miss"></div>
+      <div id="KVStore_EU-read-miss"></div>
+      <div id="KVStore_ASIA-read-miss"></div>
+      <div id="KVStore_AUS-read-miss"></div>
+    </div>
+    <hr>
+    <h2 id="write-latency">Write latency</h2>
+    <p id="write-state" class="description time loading">
+      Running benchmark.<span class="loading"></span>
+    </p>
+    <table>
+      <tr>
+        <th>Store</th>
+        <th>From(POP)</th>
+        <th># of Requests</th>
+        <th>mean</th>
+        <th>median</th>
+        <th>min</th>
+        <th>max</th>
+      </tr>
+      <tr id="summary-SecretStore-write-"></tr>
+      <tr id="summary-ConfigStore-write-"></tr>
+      <tr id="summary-KVStore_US-write-"></tr>
+      <tr id="summary-KVStore_EU-write-"></tr>
+      <tr id="summary-KVStore_ASIA-write-"></tr>
+      <tr id="summary-KVStore_AUS-write-"></tr>
+    </table>
+    <div class="box">
+      <div id="SecretStore-write-"></div>
+      <div id="ConfigStore-write-"></div>
+      <div id="KVStore_US-write-"></div>
+      <div id="KVStore_EU-write-"></div>
+      <div id="KVStore_ASIA-write-"></div>
+      <div id="KVStore_AUS-write-"></div>
+    </div>
+    <hr>
+    <script>
+      function isStoreSelected(type=""){
+        return new URL(window.location.href).searchParams.get("store")
+          && new URL(window.location.href).searchParams.get("store") == type;
+      }
+      function createSummary(id){
+        [
+          id,
+          "FASTLY_POP"
+        ].map((e)=>{
+          let td = d3.select(`#summary-${id}`).append("td");
+          td.text(e)
+        });
+      }
+      function fillInSummary(rows,id){
+        [
+          rows.length,
+          Number(rows.reduce((sum, e)=>{return sum + Number(e.latency);}, 0)/rows.length).toFixed(7), // average
+          Number(rows.sort((a, b) => a-b)[(rows.length - (rows.length%2 ? 1 : 0) )/2].latency).toFixed(7), // median
+          Math.min(...rows.map(e=>{return e.latency})).toFixed(7),
+          Math.max(...rows.map(e=>{return e.latency})).toFixed(7)
+        ].map((e, index)=>{
+          let td = d3.select(`#summary-${id}`).append("td");
+          index < 1 ? td.text(e) : td.attr("class", "float").text(e);
+        });
+      }
+      function renderChart(rows, id){
+        var data = [
+          {
+            type: "violin",
+            y: rows.map((row)=>{ return row["latency"];}),
+            points: "all",
+            box: {
+              visible: true,
+            },
+            boxpoints: false,
+            line: {
+              color: "black",
+            },
+            fillcolor: "#8dd3c7",
+            opacity: 0.6,
+            meanline: {
+              visible: true,
+            },
+            name: "Latency",
+          },
+        ];
+        var layout = {
+          title: `${id} time [ms]`,
+          height: 400,
+          width: 400,
+          yaxis: {
+            rangemode: "tozero",
+            autorange: true,
+          },
+        };
+        Plotly.newPlot(id, data, layout, {
+          displayModeBar: false,
+        });
+      }
+
+      let csvFetchState = {};
+      [
+        ["Secret",""],
+        ["Config",""],
+        ["KV","US"],
+        ["KV","EU"],
+        ["KV","ASIA"],
+        ["KV","AUS"],
+      ].forEach(target=>{
+        [
+          ["write",""],
+          ["read","hit"],
+          ["read","miss"],
+        ].forEach(ops=>{
+          if (target[0] != "KV" && ops[0] == "write") {
+            return;
+          } else if (
+            new URL(window.location.href).searchParams.get("store")
+            && new URL(window.location.href).searchParams.get("store") != target[0]
+          ) {
+            return;
+          } else {
+            let region = target[1] == "" ? "" : "_" + target[1];
+            let id = `${target[0]}Store${region}-${ops[0]}-${ops[1]}`;
+            Number.isInteger(csvFetchState[ops.join("")])
+              ? csvFetchState[ops.join("")] += 1
+              : csvFetchState[ops.join("")] = 1;
+            createSummary(id);
+            d3.csv(`/${target[0].toLowerCase()}-store/csv?region=${target[1]}&action=${ops[1]}&operation=${ops[0]}`, function (err, rows) {
+              renderChart(rows,id);
+              fillInSummary(rows,id);
+              csvFetchState[ops.join("")] -= 1
+              if (csvFetchState[ops.join("")] <= 0){
+                d3.select(`#${ops.join("")}-state`).classed("loading", false);
+                d3.select(`#${ops.join("")}-state`).html(
+                  "<span>Executed at " + new Date(Date.now() + (new Date().getTimezoneOffset()*60*1000)).toLocaleDateString("ja-JP", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit"
+                }) + " (UTC)</span>")
+              }
+            });
+          }     
+        })
+      });
+
+      window.addEventListener("load", (event) => {
+        if ("FASTLY_POP" != "localhost") {
+          d3.select("#pop").attr("value","FASTLY_POP");
+        }
+        const links = ["KV","Secret","Config"].map((e)=>{
+          return isStoreSelected(e) ? e+"Store" : "<a href='/?store="+e+"'>"+e+"Store</a>"
+        })
+        d3.select("#storeSelector").html((links.filter((e)=>{return e.includes("href")}).length == 3 ? "All" : "<a href='/?pop=FASTLY_POP'>All</a>" ) + " | " + links.join(" | "));
+      });
+    </script>
+  </body>
+</html>
