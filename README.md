@@ -16,7 +16,7 @@ Please feel free to reach out to Kay (sawada@fastly.com), if there is any questi
 
 To set up default state of each Store, following snippet might be helpful;
 
-```
+```bash
 for i in {1..100} ; do
   echo DEFAULT_VALUE_${i} | fastly config-store-entry create -k DEFAULT_KEY_${i} --store-id F6sHx8qNRZKdb62Yd0fiq3 --token $TOKEN --stdin
   echo DEFAULT_VALUE_${i} | fastly secret-store-entry create -n DEFAULT_KEY_${i} --store-id XJKQ1emEhYhFPASzyXi8Fo --token $TOKEN --stdin
