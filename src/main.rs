@@ -4,8 +4,8 @@ use fastly::ConfigStore;
 use fastly::KVStore;
 use fastly::{mime, Error, Request, Response};
 use rand::distributions::{Alphanumeric, DistString};
-use std::time::Instant;
 use serde::Deserialize;
+use std::time::Instant;
 
 #[derive(Deserialize)]
 struct CodeParams {
@@ -41,7 +41,8 @@ fn main(req: Request) -> Result<Response, Error> {
         // If request is to the `/` path, serve the HTML
         "/" => {
             let params: CodeParams = req.get_query().unwrap();
-            let fastly_pop = std::env::var("FASTLY_POP").unwrap_or_else(|_| "localhost".to_string());
+            let fastly_pop =
+                std::env::var("FASTLY_POP").unwrap_or_else(|_| "localhost".to_string());
             let html = include_str!("index.html").replace("FASTLY_POP", &fastly_pop);
 
             Ok(Response::from_status(StatusCode::OK)
@@ -59,7 +60,7 @@ fn main(req: Request) -> Result<Response, Error> {
             for n in 1..RUNS {
                 let key = match params.action.clone().unwrap().as_ref() {
                     "hit" => "DEFAULT_KEY_".to_string() + &n.to_string(),
-                    _ => string.clone() + &n.to_string()
+                    _ => string.clone() + &n.to_string(),
                 };
 
                 let now = Instant::now();
@@ -82,7 +83,8 @@ fn main(req: Request) -> Result<Response, Error> {
 
             let mut secret_latency: [f64; RUNS as usize] = [0.0; RUNS as usize];
 
-            let secret_store = secret_store::SecretStore::open("compute-store-read-write-latencies")?;
+            let secret_store =
+                secret_store::SecretStore::open("compute-store-read-write-latencies")?;
 
             for n in 1..RUNS {
                 let elapsed_time = match params.action.clone().unwrap().as_ref() {
@@ -91,7 +93,7 @@ fn main(req: Request) -> Result<Response, Error> {
                         let now = Instant::now();
                         let _entry = secret_store.get(&key).unwrap().plaintext();
                         now.elapsed()
-                    },
+                    }
                     _ => {
                         let key = string.clone() + &n.to_string();
                         let now = Instant::now();
@@ -121,22 +123,28 @@ fn main(req: Request) -> Result<Response, Error> {
                 "EU" => "-EU",
                 "ASIA" => "-ASIA",
                 "AUS" => "-AUS",
-                _ => ""
-              };
-            let mut kv_store = KVStore::open(&format!("compute-store-read-write-latencies-prod{}", region))?.unwrap();
+                _ => "",
+            };
+            let mut kv_store = KVStore::open(&format!(
+                "compute-store-read-write-latencies-prod{}",
+                region
+            ))?
+            .unwrap();
 
             for n in 1..RUNS {
-                if params.operation.clone().unwrap() == "write" && n >=40 {break;}
+                if params.operation.clone().unwrap() == "write" && n >= 40 {
+                    break;
+                }
 
                 let key = match params.action.clone().unwrap().as_ref() {
                     "hit" => "DEFAULT_KEY_".to_string() + &n.to_string(),
-                    _ => string.clone() + &n.to_string()
+                    _ => string.clone() + &n.to_string(),
                 };
 
                 let now = Instant::now();
-                 if params.operation.clone().unwrap() == "write" {
+                if params.operation.clone().unwrap() == "write" {
                     kv_store.insert(&key, "SOME_VALUE");
-                 } else {
+                } else {
                     let _entry = kv_store.lookup_str(&key)?;
                 };
                 let elapsed_time = now.elapsed();
@@ -144,7 +152,9 @@ fn main(req: Request) -> Result<Response, Error> {
             }
             let mut csv = "latency\n".to_owned();
             for n in 1..RUNS {
-                if params.operation.clone().unwrap() == "write" && n >=41 {break;}
+                if params.operation.clone().unwrap() == "write" && n >= 41 {
+                    break;
+                }
                 csv = csv + &kv_latency[n as usize].to_string() + "\n";
             }
 
