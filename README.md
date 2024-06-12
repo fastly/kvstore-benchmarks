@@ -1,6 +1,6 @@
 # kvstore-benchmarks
 
-This Fastly Compute application makes dozens or a handred of requests from Fastly POP to a local Secret Store, a local Config Store and a KV Store in {US, EU, ASIA, AUS} region, to monitor read and write latencies.
+This Fastly Compute application makes dozens of (or a hundred) requests from Fastly POP to a local Secret Store, a local Config Store and a KV Store in {US, EU, ASIA, AUS} region, to monitor read and write latencies.
 
 There are two versions available for this tool. The first one (https://fastly-kvstore-benchmarks.edgecompute.app/) is designed and implemented to measure KVStore performance using multiple POP locations, which was first presented at Fastly's developer event on June 2024.
 
