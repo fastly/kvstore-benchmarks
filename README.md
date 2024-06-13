@@ -10,7 +10,7 @@ The second one, on the other hand, is capable of measuring benchmark scores of e
 
 ![Screenshots](screenshot_single_pop.png)
 
-Please feel free to reach out to Kay (sawada@fastly.com), if there is any question.
+Please feel free to reach out to @remore in an issue if there are any questions.
 
 ## Note
 
